@@ -39,32 +39,66 @@ public class SeamCarving
     }
    
    public static void writepgm(int[][] image, String filename){
-	   assert(image.length>0):"Tableau vide, impossible de créer l'image :(";	 
-	   int linesize=0; //permet de respecter les 70 caractères par ligne  
+	   assert(image.length>0):"Tableau vide, impossible de créer l'image :(";	
 	   try {
-		   
-		   File f=new File(filename);
+		   /*int curseur=0,linesize=0;
+		   if (image.length>30){
+			   linesize=30;
+		   }else{
+			   linesize=image.length;
+		   }*/
+		   File f=new File(filename+".pgm");
 		   FileWriter fw=new FileWriter(f);
 		   BufferedWriter bw = new BufferedWriter(fw);
 		   bw.write("P2");
 		   bw.newLine();
-		   bw.write(image.length+" "+image[0].length);
+		   bw.write(image[0].length+" "+image.length);
 		   bw.newLine();
-		   for (int i=0;i<image[0].length;i++){
-			   for (int j=0;j<image.length;j++){
-				   if(linesize>70){
+		   bw.write("255");
+		   bw.newLine();
+
+		   for (int j=0;j<image.length;j++){
+			   for (int i=0;i<image[0].length;i++){
+				   
+				   bw.write(image[j][i]+"\t");
+				   /*curseur++;
+				   if (linesize>0 && curseur==linesize){
 					   bw.newLine();
-				   }
-				   bw.write(image[j][i]);
-				   linesize++;
+					   curseur=0;
+				   }*/
 			   }
+			   bw.newLine();
+			   /*if(linesize==0){
+				  
+			   }*/
 		   }
+		   bw.close();
 		   fw.close();
 	   }
 	   catch(Throwable t) {
            t.printStackTrace(System.err) ;
        }
    }
-
    
+   public static int[][] interest(int[][] image){
+	   assert(image.length>1);
+	   int[][]tab=new int[image.length][image[0].length];
+	   for (int j=0;j<image.length;j++){
+		   tab[j][0]=Math.abs(image[j][0]-image[j][1]);
+		   for (int i=1;i<image[0].length-1;i++){
+			   int moyenne = (image[j][i-1] + image[j][i+1])/2;
+			   tab[j][i]=Math.abs(moyenne-image[j][i]);
+		   }
+		   tab[j][image[0].length-1]=Math.abs(image[j][image[0].length-1]-image[j][image[0].length-2]);
+	   }
+	   
+	   return tab;
+   }
+
+   public static void main(String[] args)
+	 {
+		int[][] hello=readpgm("test.pgm");
+		hello=interest(hello);
+		writepgm(hello,"oui");
+	 }
 }
