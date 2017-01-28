@@ -81,7 +81,7 @@ public class SeamCarving
    }
    
    public static int[][] interest(int[][] image){
-	   assert(image.length>1);
+	   assert(image.length>1):"tableau trop petit";
 	   int[][]tab=new int[image.length][image[0].length];
 	   for (int j=0;j<image.length;j++){
 		   tab[j][0]=Math.abs(image[j][0]-image[j][1]);
@@ -95,10 +95,41 @@ public class SeamCarving
 	   return tab;
    }
 
+   public static Graph tograph(int[][] itr){
+	   GraphArrayList graph=new GraphArrayList(itr.length*itr[0].length+2);
+	   
+	   for (int j=0;j<itr[0].length;j++){
+		   graph.addEdge(new Edge(itr.length*itr[0].length+1,j,0));
+	   }
+	   
+	   for (int j=0;j<itr.length-1;j++){
+		   graph.addEdge(new Edge(j*itr[0].length,(j+1)*itr[0].length,itr[j][0]));
+		   graph.addEdge(new Edge(j*itr[0].length,(j+1)*itr[0].length+1,itr[j][0]));
+		   for (int i=1;i<itr[0].length-1;i++){
+			   graph.addEdge(new Edge(i+j*itr[0].length,i-1+(j+1)*itr[0].length,itr[j][i]));
+			   graph.addEdge(new Edge(i+j*itr[0].length,i+(j+1)*itr[0].length,itr[j][i]));
+			   graph.addEdge(new Edge(i+j*itr[0].length,i+1+(j+1)*itr[0].length,itr[j][i]));
+		   }
+		   graph.addEdge(new Edge(itr.length+j*itr[0].length,itr.length+(j+1)*itr[0].length,itr[j][itr[0].length-1]));
+		   graph.addEdge(new Edge(itr.length+j*itr[0].length,itr.length-1+(j+1)*itr[0].length,itr[j][itr[0].length-1]));
+	   }
+	   
+	   
+	   for (int j=0;j<itr[0].length;j++){
+		   graph.addEdge(new Edge(itr[0].length*(itr.length-1)+j,itr.length*itr[0].length,itr[itr.length-1][j]));
+	   }
+	   
+	   
+	   graph.writeFile("please.dot");
+	   return graph;
+	   
+   }
+   
    public static void main(String[] args)
 	 {
 		int[][] hello=readpgm("test.pgm");
 		hello=interest(hello);
-		writepgm(hello,"oui");
+		tograph(hello);
+	   	
 	 }
 }
