@@ -1,10 +1,8 @@
 package modelisation;
 
-class Test
-{
-   static boolean visite[];
-   public static void dfs(Graph g, int u)
-	 {
+class Test {
+	static boolean visite[];
+	public static void dfs(Graph g, int u) {
 		visite[u] = true;
 		System.out.println("Je visite " + u);
 		for (Edge e: g.next(u))
@@ -12,8 +10,7 @@ class Test
 			dfs(g,e.to);
 	 }
    
-   public static void testGraph()
-	 {
+	public static void testGraph() {
 		int n = 5;
 		int i,j;
 		GraphArrayList g = new GraphArrayList(n*n+2);
@@ -35,8 +32,7 @@ class Test
 		dfs(g, 3);
 	 }
    
-   public static void main(String[] args)
-	 {
+   	public static void main(String[] args) {
 		testGraph();
-	 }
+	}
 }
