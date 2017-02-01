@@ -121,7 +121,7 @@ public class SeamCarving {
 	   return graph;
 	   
    }
-   
+
    public static void dfs(Graph g, int u, ArrayList<Integer> ordre) {
 		visite[u] = true;		
 		for (Edge e: g.next(u)){
