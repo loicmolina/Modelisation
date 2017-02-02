@@ -187,54 +187,71 @@ public class SeamCarving {
 	   return ccm;
    }
    
+   public static void afficherTab(int[][] tab) {
+	   for (int y=0 ; y<tab.length ; y++) {
+		   for (int x=0 ; x<tab[0].length ; x++) {
+			   System.out.print(tab[y][x]+" ");
+		   }
+		   System.out.println("");
+	   }
+	   System.out.println("");
+   }
+   
    public static void deletePX(int nbDelete, String name) {
-	   
-	   int[][] tabImage = readpgm(name);
+	   int[][] tabImage = readpgm(name+".pgm");
+	   int[][] tabInterImage = interest(tabImage);
+
 	   Graph g;
 	   ArrayList<Integer> ordre;
 	   ArrayList<Integer> cheminMin;
-
 	   
 	   int largeur = tabImage[0].length;
 	   int hauteur = tabImage.length;
+
 	   int[][] nouvelleImage = new int[hauteur][largeur-nbDelete];
 	   int j;
 	   
 	   for (int i=0 ; i<nbDelete ; i++) {
+
+		   /* Tableau tmp au bonne dimmension et rempli */
 		   int[][] tmpImage = new int[hauteur][largeur];
+		   for (int y=0 ; y<hauteur ; y++) {
+			   for (int x=0 ; x<largeur ; x++) {
+				   tmpImage[y][x]=tabInterImage[y][x];
+			   }
+		   }
 		   
-		   
-		   tabImage = interest(tabImage);
-		   g = tograph(tabImage);
-		   ordre = tritopo(tograph(tabImage));
+		   /* Calcul sur le tableau tmp */
+		   g = tograph(tmpImage);
+		   ordre = tritopo(g);
 		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
 		   
+		   /* Parcour et suppression des pixels inutiles */
 		   for (int y=0 ; y<hauteur ; y++) {
 			   j=0;
 			   for (int x=0 ; x<largeur ; x++) {
 				   int position = largeur * y + x;
 				   if (position != cheminMin.get(y+1)) {
+					   tabInterImage[y][j]=tmpImage[y][x];
 					   tabImage[y][j]=tabImage[y][x];
 					   j++;
-				   }
+				   } 
 			   }
 		   }
 		   largeur--;
 	   }
 	   
+	   /* On transfère l'image dans un tableau au bonne dimension */
 	   for (int y=0 ; y<nouvelleImage.length ; y++) {
 		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
 			   nouvelleImage[y][x] = tabImage[y][x];
 		   }
 	   }
 	   
-	   
-		writepgm(nouvelleImage,"modif_image");
+		writepgm(nouvelleImage,"modif_image_"+name);
    }
    
-   public static void main(String[] args) {
-	   String name = "test.pgm";
-	   
-	   deletePX(2,name);
+   public static void main(String[] args) {	   
+	   deletePX(100,"shiba");
    }
 }
