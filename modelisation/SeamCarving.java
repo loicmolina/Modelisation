@@ -117,7 +117,7 @@ public class SeamCarving {
 		   graph.addEdge(new Edge(itr[0].length*(itr.length-1)+j,itr.length*itr[0].length,itr[itr.length-1][j]));
 	   }
 	   
-	   graph.writeFile("please.dot");
+	   //graph.writeFile("please.dot");
 	   return graph;
 	   
    }
@@ -139,13 +139,102 @@ public class SeamCarving {
 	   dfs(g,u,ordre);
 	   ordre.add(g.vertices()-1);
 	   Collections.reverse(ordre);
-	   
+
 	   return ordre;
    }
    
+   public static ArrayList<Integer> Bellman(Graph g,int s,int t,ArrayList<Integer> order){
+	   ArrayList<Integer> ccm = new ArrayList<>();
+ 
+	   int[] chemin = creerTabChemin(g,s,order);
+	   ccm = creerListChemin(chemin,s,t);
+
+	   return ccm;
+   }
+   
+   public static int[] creerTabChemin(Graph g, int s, ArrayList<Integer> order) {
+	   int[] tab = new int[order.size()];
+	   int[] chemin = new int[order.size()];
+	   
+	   for(int i:order) {
+		   tab[i]=9999;
+
+		   if (i == s) {
+			   tab[i]=0;
+		   }
+		   for(Edge e:g.prev(i)) {
+			   if (tab[i] > tab[e.from]+e.cost) {
+				   tab[i] = tab[e.from]+e.cost;
+				   chemin[i] = e.from;
+			   } 
+		   }
+	   }
+	   
+	   return chemin;
+   }
+   
+   public static ArrayList<Integer> creerListChemin(int[] chemin, int s, int t) {
+	   ArrayList<Integer> ccm = new ArrayList<>();
+	   int k = t;
+	   while (k != s) {
+		   ccm.add(k);
+		   k = chemin[k];
+	   }
+	   ccm.add(s);
+	   
+	   Collections.reverse(ccm);
+	   
+	   return ccm;
+   }
+   
+   public static void deletePX(int nbDelete, String name) {
+	   
+	   int[][] tabImage = readpgm(name);
+	   Graph g;
+	   ArrayList<Integer> ordre;
+	   ArrayList<Integer> cheminMin;
+
+	   
+	   int largeur = tabImage[0].length;
+	   int hauteur = tabImage.length;
+	   int[][] nouvelleImage = new int[hauteur][largeur-nbDelete];
+	   int j;
+	   
+	   for (int i=0 ; i<nbDelete ; i++) {
+		   int[][] tmpImage = new int[hauteur][largeur];
+		   
+		   
+		   tabImage = interest(tabImage);
+		   g = tograph(tabImage);
+		   ordre = tritopo(tograph(tabImage));
+		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
+		   
+		   for (int y=0 ; y<hauteur ; y++) {
+			   j=0;
+			   for (int x=0 ; x<largeur ; x++) {
+				   int position = largeur * y + x;
+				   if (position != cheminMin.get(y+1)) {
+					   tabImage[y][j]=tabImage[y][x];
+					   j++;
+				   }
+			   }
+		   }
+		   largeur--;
+	   }
+	   
+	   for (int y=0 ; y<nouvelleImage.length ; y++) {
+		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
+			   nouvelleImage[y][x] = tabImage[y][x];
+		   }
+	   }
+	   
+	   
+		writepgm(nouvelleImage,"modif_image");
+   }
+   
    public static void main(String[] args) {
-	   int[][] hello=readpgm("test.pgm");
-	   hello=interest(hello);
-	   tritopo(tograph(hello));
+	   String name = "test.pgm";
+	   
+	   deletePX(2,name);
    }
 }
