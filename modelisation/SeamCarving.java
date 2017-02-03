@@ -46,7 +46,7 @@ public class SeamCarving {
 		   	}else{
 			   linesize=image.length;
 		   	}*/
-			File f=new File(filename+".pgm");
+			File f=new File(filename);
 			FileWriter fw=new FileWriter(f);
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.write("P2");
@@ -94,27 +94,28 @@ public class SeamCarving {
    }
 
    public static Graph tograph(int[][] itr){
-	   GraphArrayList graph=new GraphArrayList(itr.length*itr[0].length+2);
-	   
-	   for (int j=0;j<itr[0].length;j++){
-		   graph.addEdge(new Edge(itr.length*itr[0].length+1,j,0));
+	   int hauteur=itr.length;
+	   int largeur = itr[0].length;
+	   GraphArrayList graph=new GraphArrayList(hauteur*largeur+2);
+	   for (int j=0;j<largeur;j++){
+		   graph.addEdge(new Edge(hauteur*largeur+1,j,0));
 	   }
 	   
-	   for (int j=0;j<itr.length-1;j++){
-		   graph.addEdge(new Edge(j*itr[0].length,(j+1)*itr[0].length,itr[j][0]));
-		   graph.addEdge(new Edge(j*itr[0].length,(j+1)*itr[0].length+1,itr[j][0]));
-		   for (int i=1;i<itr[0].length-1;i++){
-			   graph.addEdge(new Edge(i+j*itr[0].length,i-1+(j+1)*itr[0].length,itr[j][i]));
-			   graph.addEdge(new Edge(i+j*itr[0].length,i+(j+1)*itr[0].length,itr[j][i]));
-			   graph.addEdge(new Edge(i+j*itr[0].length,i+1+(j+1)*itr[0].length,itr[j][i]));
+	   for (int j=0;j<hauteur-1;j++){
+		   graph.addEdge(new Edge(j*largeur,(j+1)*largeur,itr[j][0]));
+		   graph.addEdge(new Edge(j*largeur,(j+1)*largeur+1,itr[j][0]));
+		   for (int i=1;i<largeur-1;i++){
+			   graph.addEdge(new Edge(i+j*largeur,i-1+(j+1)*largeur,itr[j][i]));
+			   graph.addEdge(new Edge(i+j*largeur,i+(j+1)*largeur,itr[j][i]));
+			   graph.addEdge(new Edge(i+j*largeur,i+1+(j+1)*largeur,itr[j][i]));
 		   }
-		   graph.addEdge(new Edge(itr.length+j*itr[0].length,itr.length+(j+1)*itr[0].length,itr[j][itr[0].length-1]));
-		   graph.addEdge(new Edge(itr.length+j*itr[0].length,itr.length-1+(j+1)*itr[0].length,itr[j][itr[0].length-1]));
+		   graph.addEdge(new Edge(j*largeur+largeur-1,(j+1)*largeur+largeur-1,itr[j][largeur-1]));
+		   graph.addEdge(new Edge(j*largeur+largeur-1,(j+1)*largeur+largeur-2,itr[j][largeur-1]));
 	   }
 	   
 	   
-	   for (int j=0;j<itr[0].length;j++){
-		   graph.addEdge(new Edge(itr[0].length*(itr.length-1)+j,itr.length*itr[0].length,itr[itr.length-1][j]));
+	   for (int j=0;j<largeur;j++){
+		   graph.addEdge(new Edge(largeur*(hauteur-1)+j,hauteur*largeur,itr[hauteur-1][j]));
 	   }
 	   
 	   //graph.writeFile("please.dot");
@@ -198,8 +199,12 @@ public class SeamCarving {
    }
    
    public static void deletePX(int nbDelete, String name) {
-	   int[][] tabImage = readpgm(name+".pgm");
-	   int[][] tabInterImage = interest(tabImage);
+	   if (!name.contains(".pgm")){
+		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
+		   return;
+	   }
+	   int[][] tabImage = readpgm(name);
+	   //int[][] tabInterImage = interest(tabImage);
 
 	   Graph g;
 	   ArrayList<Integer> ordre;
@@ -214,34 +219,38 @@ public class SeamCarving {
 	   for (int i=0 ; i<nbDelete ; i++) {
 
 		   /* Tableau tmp au bonne dimmension et rempli */
-		   int[][] tmpImage = new int[hauteur][largeur];
+		   int[][] tmpImage = new int[hauteur][largeur]; // les px
+		   int[][] tmpInterImage = new int[hauteur][largeur]; // l'interet
+		   
 		   for (int y=0 ; y<hauteur ; y++) {
 			   for (int x=0 ; x<largeur ; x++) {
-				   tmpImage[y][x]=tabInterImage[y][x];
+				   tmpImage[y][x]=tabImage[y][x];
 			   }
 		   }
 		   
 		   /* Calcul sur le tableau tmp */
-		   g = tograph(tmpImage);
+		   tmpInterImage = interest(tmpImage);
+		   g = tograph(tmpInterImage);
+		   //g.writeFile("test.dot");
 		   ordre = tritopo(g);
 		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
 		   
-		   /* Parcour et suppression des pixels inutiles */
+		   /* Parcours et suppression des pixels inutiles */
 		   for (int y=0 ; y<hauteur ; y++) {
 			   j=0;
 			   for (int x=0 ; x<largeur ; x++) {
 				   int position = largeur * y + x;
 				   if (position != cheminMin.get(y+1)) {
-					   tabInterImage[y][j]=tmpImage[y][x];
 					   tabImage[y][j]=tabImage[y][x];
 					   j++;
 				   } 
 			   }
 		   }
+		   
 		   largeur--;
 	   }
 	   
-	   /* On transfère l'image dans un tableau au bonne dimension */
+	   /* On transfere l'image dans un tableau au bonne dimension */
 	   for (int y=0 ; y<nouvelleImage.length ; y++) {
 		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
 			   nouvelleImage[y][x] = tabImage[y][x];
@@ -249,9 +258,17 @@ public class SeamCarving {
 	   }
 	   
 		writepgm(nouvelleImage,"modif_image_"+name);
+		
+		System.out.println("Fichier terminÃ© : modif_image_"+name);
    }
    
-   public static void main(String[] args) {	   
-	   deletePX(100,"shiba");
+   public static void main(String[] args) {
+	   if (args.length!=2){
+		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
+	   }else{
+		   int nbPixel=Integer.parseInt(args[1]);
+		   String nom=args[0];
+		   deletePX(nbPixel,nom);
+	   }
    }
 }
