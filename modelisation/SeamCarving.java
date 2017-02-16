@@ -1,6 +1,7 @@
 package modelisation;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.io.*;
 import java.util.*;
 public class SeamCarving {
@@ -132,7 +133,7 @@ public class SeamCarving {
 		}
    }
    
-   public static ArrayList<Integer> tritopo(Graph g) {
+   /*public static ArrayList<Integer> tritopo(Graph g) {
 	   ArrayList<Integer> ordre=new ArrayList<Integer>();
 	   visite=new boolean[g.vertices()];
 	   int u = g.vertices()-1;
@@ -141,7 +142,47 @@ public class SeamCarving {
 	   Collections.reverse(ordre);
 
 	   return ordre;
-   }
+   }*/
+   
+   public static ArrayList<Integer> tritopo(Graph g) {
+	   Stack<Integer> uStack = new Stack<Integer>();
+	   Stack<Iterator> itStack = new Stack<Iterator>();
+	   boolean visited[] = new boolean[g.vertices()];
+	   int v;
+	   ArrayList<Integer> suffixe = new ArrayList<Integer>();
+	   
+	   
+	   /* Ajout de (s,next(s)) */
+	   int s = g.vertices()-1;
+	   uStack.push(s);
+	   itStack.push(g.next(s).iterator());
+	   
+	   visited[s] = true;
+	   
+	   while (!uStack.empty() && !itStack.empty()) {
+		   int u = uStack.peek();
+		   Iterator<Edge> it = itStack.peek();
+		   
+		   if(it.hasNext()) {
+			   v = it.next().to;
+			   if(visited[v]) {
+				   //break;
+			   } else {
+				   visited[v] = true;
+				   uStack.push(v);
+				   itStack.push(g.next(v).iterator());
+			   }
+		   } else {
+			   uStack.pop();
+			   itStack.pop();
+			   suffixe.add(u);
+		   }
+	   }
+
+	  Collections.reverse(suffixe);
+	  System.out.println(suffixe);
+	  return suffixe;
+   	}
    
    public static ArrayList<Integer> Bellman(Graph g,int s,int t,ArrayList<Integer> order){
 	   ArrayList<Integer> ccm = new ArrayList<>();
@@ -233,8 +274,8 @@ public class SeamCarving {
    }
    
    public static void main(String[] args) {
-	   String name = "test.pgm";
-	   
-	   deletePX(2,name);
+	   int[][] tab = readpgm("test.pgm");
+	   Graph g = tograph(interest(tab));	
+	   tritopo(g);
    }
 }
