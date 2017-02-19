@@ -181,7 +181,7 @@ public class SeamCarving {
 	   }
 
 	  Collections.reverse(suffixe);
-	  System.out.println(suffixe);
+	  //System.out.println(suffixe);
 	  return suffixe;
    	}
    
@@ -229,7 +229,7 @@ public class SeamCarving {
 	   return ccm;
    }
    
-   public static void afficherTab(int[][] tab) {
+   public static void Tab(int[][] tab) {
 	   for (int y=0 ; y<tab.length ; y++) {
 		   for (int x=0 ; x<tab[0].length ; x++) {
 			   System.out.print(tab[y][x]+" ");
@@ -300,13 +300,15 @@ public class SeamCarving {
 	   
 		writepgm(nouvelleImage,"modif_image_"+name);
 		
-		System.out.println("Fichier terminÃ© : modif_image_"+name);
+		System.out.println("Fichier prêt : modif_image_"+name);
    }
    
    public static void main(String[] args) {
 	   int[][] tab = readpgm("test.pgm");
-	   Graph g = tograph(interest(tab));	
+	   tab = interest(tab);
+	   Graph g = tograph(tab);	
 	   tritopo(g);
+	   
 	   if (args.length!=2){
 		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
 	   }else{
