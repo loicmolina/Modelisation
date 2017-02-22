@@ -239,7 +239,7 @@ public class SeamCarving {
 	   System.out.println("");
    }
    
-   public static void deletePX(int nbDelete, String name) {
+   public static void deletePX(int nbDelete, String name, int[] posHG, int[] posBD, boolean priorite, boolean usage) {
 	   if (!name.contains(".pgm")){
 		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
 		   return;
@@ -271,6 +271,9 @@ public class SeamCarving {
 		   
 		   /* Calcul sur le tableau tmp */
 		   tmpInterImage = interest(tmpImage);
+		   if(usage) {
+			   prioriteSuppression(tmpInterImage,posHG,posBD,priorite);
+		   }
 		   g = tograph(tmpInterImage);
 		   //g.writeFile("test.dot");
 		   ordre = tritopo(g);
@@ -300,21 +303,53 @@ public class SeamCarving {
 	   
 		writepgm(nouvelleImage,"modif_image_"+name);
 		
-		System.out.println("Fichier prêt : modif_image_"+name);
+		System.out.println("Fichier pret : modif_image_"+name);
+   }
+   
+   public static void prioriteSuppression(int[][] tab, int[] posHG, int[] posBD, boolean priorite) {
+	   int valeur=0;
+	   if (priorite) {
+		   valeur=0;
+	   } else {
+		   valeur=9999999;
+	   }
+	   
+	   for (int y=0 ; y<tab.length ; y++) {
+		   for (int x=0 ; x<tab[0].length ; x++) {
+			   if ((x>=posHG[0] && x<=posBD[0]) && (y>=posHG[1] && y<=posBD[1])) {
+				   tab[y][x] = valeur;
+			   }
+		   }
+	   }
    }
    
    public static void main(String[] args) {
-	   int[][] tab = readpgm("test.pgm");
+	   String name = "friends.pgm";
+	   int nbPixel = 200;
+	   int[][] tab = readpgm(name);
 	   tab = interest(tab);
+	   //prioriteSuppression(tab,0,0,0,2,true);
 	   Graph g = tograph(tab);	
 	   tritopo(g);
 	   
-	   if (args.length!=2){
+	   int[] posHG = new int[2];
+	   int[] posBD = new int[2];
+	   posHG[0] = 316;
+	   posHG[1] = 160;
+	   posBD[0] = 416;
+	   posBD[1] = 386;
+	   boolean priorite = false;
+	   boolean usage = true;
+	   
+	   // nombre pixel Ã  supprimer / nom / position haut gauche / position bas droite / priorite / usage
+	   deletePX(nbPixel,name,posHG,posBD,priorite,usage);
+	   
+	   /*if (args.length!=2){
 		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
 	   }else{
 		   int nbPixel=Integer.parseInt(args[1]);
 		   String nom=args[0];
 		   deletePX(nbPixel,nom);
-	   }
+	   }*/
    }
 }

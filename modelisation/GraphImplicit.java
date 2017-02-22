@@ -33,18 +33,16 @@ class GraphImplicit implements Graph {
 			for (int i = 0; i < W ; i++) {
 	    		edges.add(new Edge(vertices()-1,i,0));
 	    	}
-    	}else{
-		
+    	} else {
 	    	if (v<vertices()-W-2){ //v est avant la derniere ligne
-	    		
-					if(v%W==0){ // v == à gauche 
+					if(v%W==0){ // v == ï¿½ gauche 
 			    		edges.add(new Edge(v,(v+W),tabInterest[v/W][v%W]));
 			    		edges.add(new Edge(v,(v+W+1),tabInterest[v/W][v%W]));    			
 					}else{
-						if (v%W==W-1){ //v == à droite
+						if (v%W==W-1){ //v == ï¿½ droite
 			        		edges.add(new Edge(v,(v+W),tabInterest[v/W][v%W]));
 			        		edges.add(new Edge(v,(v+W-1),tabInterest[v/W][v%W]));   
-						}else{ // v != extrémité		
+						}else{ // v != extrï¿½mitï¿½		
 		        			edges.add(new Edge(v,(v+W),tabInterest[v/W][v%W]));
 		            		edges.add(new Edge(v,(v+W-1),tabInterest[v/W][v%W])); 
 		            		edges.add(new Edge(v,(v+W+1),tabInterest[v/W][v%W]));  				        		
@@ -70,17 +68,17 @@ class GraphImplicit implements Graph {
         		edges.add(new Edge(vertices()-2-W+i,v,tabInterest[v/W-1][(v-W+i)%W]));
         	}
     	}else{
-			if (v>=W){ //v est après la premiere ligne
-				if(v%W==0){ // v == à gauche 
+			if (v>=W){ //v est aprï¿½s la premiere ligne
+				if(v%W==0){ // v == ï¿½ gauche 
 		    		edges.add(new Edge(v-W,v,tabInterest[v/W-1][v%W]));
 		    		edges.add(new Edge(v-W+1,v,tabInterest[v/W-1][v%W+1]));    			
 				}else{
-					if (v%W==W-1){ //v == à droite
+					if (v%W==W-1){ //v == ï¿½ droite
 						edges.add(new Edge(v-W,v,tabInterest[(v/W)-1][v%W]));
 			    		edges.add(new Edge(v-W-1,v,tabInterest[(v/W)-1][v%W-1]));    	 
 					}else{
 						if (v < vertices()-2){
-							// v != extrémité		
+							// v != extrï¿½mitï¿½		
 		        			edges.add(new Edge(v-W-1,v,tabInterest[v/W-1][v%W-1]));
 		            		edges.add(new Edge(v-W,v,tabInterest[v/W-1][v%W])); 
 		            		edges.add(new Edge(v-W+1,v,tabInterest[v/W-1][v%W+1]));  
