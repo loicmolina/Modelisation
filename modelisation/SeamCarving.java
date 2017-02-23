@@ -219,7 +219,7 @@ public class SeamCarving {
 	   dfs(g,u,ordre);
 	   ordre.add(g.vertices()-1);
 	   Collections.reverse(ordre);
-
+	   
 	   return ordre;
    }*/
    

@@ -9,8 +9,8 @@ import java.util.Stack;
 class DFS {
 	
 	/*
-	 * Le probl√®me de la fonction est le parcours des sommets. Celui-ci est effectu√© en largeur au lieu d'en profondeur.
-	 * On a donc les sommets 1, 2 et 3 qui seront visit√© √† la suite, alors qu'apr√®s la visite de 1, on devrait parcourir 4, 3 et 5. 
+	 * Le probleme de la fonction est le parcours des sommets. Celui-ci est effectuÈ en largeur au lieu d'en profondeur.
+	 * On a donc les sommets 1, 2 et 3 qui seront visitÈ ‡ la suite, alors qu'aprËs la visite de 1, on devrait parcourir 4, 3 et 5. 
 	 */
     public static void botched_dfs1(Graph g, int s) {
     	Stack<Integer> stack = new Stack<Integer>();

@@ -1,0 +1,75 @@
+Rapport 2e rendu devoir modélisation
+
+MORIZOT Quentin - MOLINA Loïc
+
+Vous trouverez dans le dossier fourni un exemple (shiba.pgm) de l'utilisation du programme 
+assez explicite avec 200px supprimé par celui-ci.
+
+
+
+Répartition du travail:
+
+
+Nous avons également travaillé la totalité du projet en binôme pour la 2e partie.
+
+Cependant, nous avons séparé les 4 modifications
+ effectuées :
+- Quentin a effectué la gestion des pixels à supprimer ou à garder.
+- Loïc a effectué l'utilisation de l'énergie avant et la suppression horizontal.
+
+Description:
+
+
+- Pour utiliser le fichier .jar, il faut ajouter le nom de l'image (en précisant l'extension .pgm) 
+et la nombre de pixel que l'on souhaite supprimer en arguments.
+
+ex : java -jar modelisation.jar image.pgm 50
+
+- Une fois lancé, le programme demande certaines spécifications à entrer dans l'invité de commandé pour 
+utiliser différentes options possibles. (traitement horizontal/vertical en Energie Avant/vertical via la création
+d'un graphe implicite/conserver des pixels en priorité/supprimer des pixels en priorité)
+- Si le nom du fichier est correct, s'il existe et s'il a le bon format, alors un fichier 
+"modif_image_nom.pgm" est créé.
+
+
+
+Amélioration : 
+
+
+-Possibilité de supprimer des lignes de pixels plutot que des colonnes.
+-Possibilité de calculer faire un graphe par énergie avant pour des suppressions verticales.
+-Ajout d'une zone de selection qui conserve les pixels à l'intérieur.
+-Ajout d'une zone de selection qui supprime en priorité les pixels à l'intérieur.
+-Possibilité de supprimer plusieurs pixels en précisant en argument un nombre. (mineur)
+
+Problème : 
+
+Par mauvaise gestion de notre temps, nous n'avons pas pu réaliser une interface graphique pour faciliter l'usage des options
+car nous avons conscience que son utilisation est quelque peu (voire même assez) agaçante et répétitive lorsqu'elle est
+effectué plusieurs fois à la suite (pour une correction, par exemple). Excusez nous pour la gêne occasionnée.
+
+Questions :
+
+DFS 1 :
+Le probleme de la fonction est le parcours des sommets. Celui-ci est effectué en largeur au lieu d'en profondeur.
+On a donc les sommets 1, 2 et 3 qui seront visité à la suite, alors qu'après la visite de 1, on devrait parcourir 4, 3 et 5. 
+
+DFS 2 :
+
+L'affichage se situe au niveau du parcours des voisins de 0. Il affiche donc 1,2,3 à la suite alors qu'il ne devrait pas les 
+visiter dans cet ordre. On a donc encore un parcours en "largeur" et un soucis d'affichage.
+
+DFS 3 :
+
+La pile peut être plus grand que O(n) car la fonction peut ajouter des sommets non visités mais déja présent dans la pile.
+Pour un graphe à 100 sommets, plus il y a d'arêtes entre les sommets plus il y a de chances que la pile contienne plusieurs 
+fois le meme sommet (exemple du graphe complet qui possède le plus d'arretes possibles).
+
+DFS 4 :
+
+Le problème de dfs4 est qu'il repasse plusieurs fois sur les même arêtes pour verifier que le voisin a deja 
+été visité. Ainsi, en arrivant au bout d'un "chemin", en retournant en arriere, il revérifie chaque arrête de chaque 
+sommet dans tous les cas. Le break dans le "if (!visited[])" permet de visiter uniquement le premier voisin non visité
+et donc effectue une vérification à la fois.
+exemple des 100 sommets : si le sommet initial est relié à tous les autres, alors, lors du parcours de tous les voisins
+du sommet initial, on parcoura autant de fois la premiere arête qu'il y a de sommets.
