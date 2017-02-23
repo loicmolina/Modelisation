@@ -317,14 +317,13 @@ public class SeamCarving {
 	   System.out.println("");
    }
    
-   public static void deletePX(int nbDelete, String name, int[] posHG, int[] posBD, boolean priorite, boolean usage) {
+   public static void deletePX(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage) {
 	   if (!name.contains(".pgm")){
 		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
 		   return;
 	   }
 	   int[][] tabImage = readpgm(name);
-	   int[][] tmp = readpgm(name);
-	   //int[][] tabInterImage = interest(tabImage);
+	   int[][] tabChemin = readpgm(name);
 
 	   Graph g;
 	   ArrayList<Integer> ordre;
@@ -336,6 +335,7 @@ public class SeamCarving {
 	   int[][] nouvelleImage = new int[hauteur][largeur-nbDelete];
 	   int j;
 	   
+	   System.out.println("[CHARGEMENT]");
 	   for (int i=0 ; i<nbDelete ; i++) {
 
 		   /* Tableau tmp au bonne dimmension et rempli */
@@ -351,7 +351,7 @@ public class SeamCarving {
 		   /* Calcul sur le tableau tmp */
 		   tmpInterImage = interestVertical(tmpImage);
 		   if(usage) {
-			   prioriteSuppression(tmpInterImage,posHG,posBD,priorite);
+			   prioriteSuppression(tmpInterImage,zonePxl,priorite);
 		   }
 		   g = new GraphImplicit(tmpInterImage,largeur,hauteur);
 		   //g.writeFile("test.dot");
@@ -365,6 +365,9 @@ public class SeamCarving {
 				   int position = largeur * y + x;
 				   if (position != cheminMin.get(y+1)) {
 					   tabImage[y][j]=tabImage[y][x];
+					   if (usage) {
+						   zonePxl[y][j]=zonePxl[y][x];
+					   }
 					   j++;
 				   } 
 			   }
@@ -380,62 +383,63 @@ public class SeamCarving {
 		   }
 	   }
 	   
-	   /* MISE EN BLANC */
-	   /*for (int y=0 ; y<nouvelleImage.length ; y++) {
-		   int i=0;
-		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
-			   while(tmp[y][i]!=nouvelleImage[y][x] && i<tmp[0].length) {
-				   tmp[y][i]=255;	
-				   i++;
+	   /* On ini la derniere ligne du tab a  faux */
+	   if (usage) {
+		   int y=zonePxl.length-1;
+		   for (int x=zonePxl[0].length-1 ; x>zonePxl[0].length-1-nbDelete ; x--) {
+			   zonePxl[y][x]=false;
+		   }
+	   }
+	   
+	   // On affiche le resultat
+	   writepgm(nouvelleImage,"modif_image_"+name);
+	   System.out.println("Fichier pret : modif_image_"+name);
+	   
+	   
+	   /* On trace le chemin employe */
+	   boolean tracage=true;
+	   if (tracage) {
+		   for (int y=0 ; y<tabChemin.length ; y++) {
+			   int i=0;
+			   for (int x=0 ; x<tabChemin[0].length ; x++) {
+				   if (i<nouvelleImage[0].length && tabChemin[y][x]!=nouvelleImage[y][i]) {
+					   tabChemin[y][x]=255;
+				   } else {
+					   i++;
+				   }
 			   }
-			   i++;
 		   }
-	   }*/
+		   
+		   // On affiche le resultat
+		   writepgm(tabChemin,"chemin_image_"+name);
+		   System.out.println("Fichier pret : chemin_image_"+name);
+	   }
 	   
-	   for (int y=0 ; y<tmp.length ; y++) {
-		   int i=0;
-		   for (int x=0 ; x<tmp[0].length ; x++) {
-			   if (tmp[y][x]!=nouvelleImage[y][i]) {
-				   tmp[y][x]=255;
-			   } else {
-				   i++;
+	   int[][] tabSelection = nouvelleImage;
+	   /* On trace la zone importante */
+	   if (usage) {
+		   for (int y=0 ; y<tabSelection.length ; y++) {
+			   for (int x=0 ; x<tabSelection[0].length ; x++) {
+				   if(zonePxl[y][x]) {
+					   tabSelection[y][x]=255;
+				   }
 			   }
 		   }
+		   
+		   // On affiche le resultat
+		   writepgm(tabSelection,"selection_image_"+name);
+		   System.out.println("Fichier pret : selection_image_"+name);
 	   }
-	   
-	   // AFFICHAGE
-	   /*for (int y=0 ; y<5; y++) {
-		   for (int x=0 ; x<20 ; x++) {
-			   System.out.print(nouvelleImage[y][x]+" ");
-		   }
-		   System.out.println("");
-	   }
-	   System.out.println("y: "+nouvelleImage.length+" x: "+nouvelleImage[0].length);
-	   System.out.println("");
-	   for (int y=0 ; y<5 ; y++) {
-		   for (int x=0 ; x<20 ; x++) {
-			   System.out.print(tmp[y][x]+" ");
-		   }
-		   System.out.println("");
-	   }
-	   System.out.println("y: "+tmp.length+" x: "+tmp[0].length);*/
-	   
-		writepgm(nouvelleImage,"modif_image_"+name);
-		System.out.println("Fichier pret : modif_image_"+name);
-		writepgm(tmp,"bitch.pgm");
-		System.out.println("Fichier pret : test_image_"+name);
    }
    
    
    
-   
-   public static void deletePXHorizontal(int nbDelete, String name, int[] posHG, int[] posBD, boolean priorite, boolean usage) {
+   public static void deletePXHorizontal(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage) {
 	   if (!name.contains(".pgm")){
 		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
 		   return;
 	   }
 	   int[][] tabImage = readpgm(name);
-	   //int[][] tabInterImage = interest(tabImage);
 
 	   Graph g  = tographHorizontal(interestHorizontal(tabImage));
 	 	   
@@ -448,6 +452,7 @@ public class SeamCarving {
 	   int[][] nouvelleImage = new int[hauteur-nbDelete][largeur];
 	   int j;
 	   
+	   System.out.println("[CHARGEMENT]");
 	   for (int i=0 ; i<nbDelete ; i++) {
 
 		   /* Tableau tmp aux bonnes dimensions et rempli */
@@ -463,7 +468,7 @@ public class SeamCarving {
 		   /* Calcul sur le tableau tmp */
 		   tmpInterImage = interestHorizontal(tmpImage);
 		   if(usage) {
-			   prioriteSuppression(tmpInterImage,posHG,posBD,priorite);
+			   prioriteSuppression(tmpInterImage,zonePxl,priorite);
 		   }
 		   g = tographHorizontal(tmpInterImage);
 		   //g.writeFile("test.dot");
@@ -496,68 +501,112 @@ public class SeamCarving {
 		
 		System.out.println("Fichier pret : modif_image_"+name);
    }
-   
-   
-   public static void prioriteSuppression(int[][] tab, int[] posHG, int[] posBD, boolean priorite) {
-	   int valeur=0;
-	   if (priorite) {
-		   valeur=0;
-	   } else {
-		   valeur=9999999;
-	   }
-	   
+ 
+   public static void prioriteSuppression(int[][] tab, boolean[][] zonePxl, boolean priorite) {
 	   for (int y=0 ; y<tab.length ; y++) {
-		   for (int x=0 ; x<tab[0].length ; x++) {
-			   if ((x>=posHG[0] && x<=posBD[0]) && (y>=posHG[1] && y<=posBD[1])) {
-				   tab[y][x] = valeur;
-			   }
-		   }
+  			for (int x=0 ; x<tab[0].length ; x++) {	   
+  				if(zonePxl[y][x]) {
+  	   				if(priorite) {
+  	   					tab[y][x] -= 99999;
+  	   				} else {
+  	   					tab[y][x] += 99999;
+  	   				}  
+  				}
+  			}
+  		}
+   }
+      
+   /* Fonction qui initialise les pixels selectionné par l'utilisateur */
+   public static void initTabPxl(boolean[][] tab, int posXHG, int posYHG, int posXBD, int posYBD) {
+	   if(posXHG>tab[0].length || posXBD>tab[0].length) {
+		   System.out.println("X TROP GRAND");
+		   return;
+	   } else if (posYHG>tab.length || posYBD>tab.length) {
+		   System.out.println("Y TROP GRAND");
+		   return;
+	   } else {
+		   for (int y=posYHG ; y<=posYBD ; y++) {
+   				for (int x=posXHG ; x<=posXBD ; x++) {			   
+   					tab[y][x]=true;
+   				}
+	   		}
 	   }
    }
    
+   
    public static void main(String[] args) {	   
-	   
-	   if (args.length!=2){
-		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
-		   System.exit(0);
-	   }
-	   
-	   int choix = -1;
-	   
-	   int[] posHG = new int[2];
-	   int[] posBD = new int[2];
 	   Scanner s = new Scanner(System.in);
-	   posHG[0] = 316;
-	   posHG[1] = 160;
-	   posBD[0] = 416;
-	   posBD[1] = 386;
-	   boolean priorite = false;
-	   boolean usage = false;
+
+	   String name = "ex1.pgm";
+	   System.out.print("Veuillez entrer le nom du fichier a traiter (fichier.pgm): ");
+	   name = s.nextLine();
+	   	   
+	   int nbPixel = 5;
+	   System.out.print("Le nombre de pixel a traiter: ");
+	   nbPixel = s.nextInt();
 	   
-	   String name = args[1];
-	   int nbPixel = Integer.parseInt(args[2]);
+	   int[][] tab = readpgm(name);
+	   boolean[][] zonePxl = new boolean[tab.length][tab[0].length];
+	   //initTabPxl(zonePxl,0,0,100,100);
+ 
+	   boolean usage=false;
+	   boolean priorite=false;
+	   boolean colonnes=true;
+	   System.out.print("Suppression de lignes (l) ou de colonnes (c): ");	   
+	   colonnes = s.next().equals("c");
 	   
-	   
-	   System.out.print("Suppression de colonnes (1) ou de lignes (2) ? ");	   
-	   choix = s.nextInt();
-	   
-	   
-	   
-	   if (choix == 1 || choix == 2){
-		   if (choix == 1){
+	   if(colonnes) {
+		   System.out.print("Voulez-vous faire usage de la selection de pixel: ");
+		   usage =  s.next().equals("oui");
+		   
+		   if(usage) {
+			   System.out.print("La priorite est a la conservation (c) ou a la suppresion (s): ");	   
+			   priorite =  s.next().equals("s");
 			   
-			   
-			   
-			   // nombre pixel Ã  supprimer / nom / position haut gauche / position bas droite / priorite / usage
-			   deletePX(nbPixel,name,posHG,posBD,priorite,usage);
-			   
-		   }else{
-			   
-			   deletePXHorizontal(nbPixel,name,posHG,posBD,priorite,usage);
+			   if(name.equals("shiba.pgm") || name.equals("friends.pgm")) {
+				   boolean utilisation = false;
+				   System.out.println("Vous avez selectionne un fichier qui possede des selections pre-enregistrer.");
+				   System.out.print("Voulez-vous les utiliser: ");
+				   utilisation =  s.next().equals("oui");
+				   
+				   if (utilisation) {
+					   if(name.equals("shiba.pgm")) {
+						   initTabPxl(zonePxl,310,127,484,374); // le shiba
+					   } else {
+						   initTabPxl(zonePxl,25,130,115,365); // la femme
+						   initTabPxl(zonePxl,320,170,400,370); // l'homme au centre
+					   }
+				   } else {
+					   int xHG,xBD,yHG,yBD;
+					   boolean fin=false;
+					   while(!fin) {
+						   System.out.print("x en haut à gauche: ");
+						   xHG = s.nextInt();
+						   System.out.print("y en haut à gauche: ");
+						   yHG = s.nextInt();
+						   System.out.print("x en bas à droite: ");
+						   xBD = s.nextInt();
+						   System.out.print("y en bas à droite: ");
+						   yBD = s.nextInt();
+						   
+						   initTabPxl(zonePxl,xHG,yHG,xBD,yBD);
+						   
+						   System.out.print("Voulez-vous refaire une selection supplementaire: ");
+						   fin = !(s.next().equals("oui"));
+					   }
+				   }   
+			   }
 		   }
+	   }
+
+	   
+	   // On supprime les pixels
+	   if (colonnes){
+		   deletePX(nbPixel,name,zonePxl,priorite,usage);
 	   }else{
-		   System.out.println("Choix incorrect");
+		   //deletePXHorizontal(nbPixel,name,zonePxl,priorite,usage);
 	   }
 	   
+	   s.close();
    }
 }
