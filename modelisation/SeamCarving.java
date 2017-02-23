@@ -245,6 +245,7 @@ public class SeamCarving {
 		   return;
 	   }
 	   int[][] tabImage = readpgm(name);
+	   int[][] tmp = readpgm(name);
 	   //int[][] tabInterImage = interest(tabImage);
 
 	   Graph g;
@@ -301,9 +302,50 @@ public class SeamCarving {
 		   }
 	   }
 	   
+	   /* MISE EN BLANC */
+	   /*for (int y=0 ; y<nouvelleImage.length ; y++) {
+		   int i=0;
+		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
+			   while(tmp[y][i]!=nouvelleImage[y][x] && i<tmp[0].length) {
+				   tmp[y][i]=255;	
+				   i++;
+			   }
+			   i++;
+		   }
+	   }*/
+	   
+	   for (int y=0 ; y<tmp.length ; y++) {
+		   int i=0;
+		   for (int x=0 ; x<tmp[0].length ; x++) {
+			   if (tmp[y][x]!=nouvelleImage[y][i]) {
+				   tmp[y][x]=255;
+			   } else {
+				   i++;
+			   }
+		   }
+	   }
+	   
+	   // AFFICHAGE
+	   /*for (int y=0 ; y<5; y++) {
+		   for (int x=0 ; x<20 ; x++) {
+			   System.out.print(nouvelleImage[y][x]+" ");
+		   }
+		   System.out.println("");
+	   }
+	   System.out.println("y: "+nouvelleImage.length+" x: "+nouvelleImage[0].length);
+	   System.out.println("");
+	   for (int y=0 ; y<5 ; y++) {
+		   for (int x=0 ; x<20 ; x++) {
+			   System.out.print(tmp[y][x]+" ");
+		   }
+		   System.out.println("");
+	   }
+	   System.out.println("y: "+tmp.length+" x: "+tmp[0].length);*/
+	   
 		writepgm(nouvelleImage,"modif_image_"+name);
-		
 		System.out.println("Fichier pret : modif_image_"+name);
+		writepgm(tmp,"bitch.pgm");
+		System.out.println("Fichier pret : test_image_"+name);
    }
    
    public static void prioriteSuppression(int[][] tab, int[] posHG, int[] posBD, boolean priorite) {
@@ -324,9 +366,10 @@ public class SeamCarving {
    }
    
    public static void main(String[] args) {
-	   String name = "friends.pgm";
-	   int nbPixel = 200;
+	   String name = "ex1.pgm";
+	   int nbPixel = 100;
 	   int[][] tab = readpgm(name);
+	   int[][] tmp = tab;
 	   tab = interest(tab);
 	   //prioriteSuppression(tab,0,0,0,2,true);
 	   Graph g = tograph(tab);	
@@ -334,11 +377,11 @@ public class SeamCarving {
 	   
 	   int[] posHG = new int[2];
 	   int[] posBD = new int[2];
-	   posHG[0] = 316;
-	   posHG[1] = 160;
-	   posBD[0] = 416;
-	   posBD[1] = 386;
-	   boolean priorite = false;
+	   posHG[0] = 0;
+	   posHG[1] = 0;
+	   posBD[0] = 200;
+	   posBD[1] = 100;
+	   boolean priorite = true;
 	   boolean usage = true;
 	   
 	   // nombre pixel à supprimer / nom / position haut gauche / position bas droite / priorite / usage
@@ -351,5 +394,9 @@ public class SeamCarving {
 		   String nom=args[0];
 		   deletePX(nbPixel,nom);
 	   }*/
+	   
+	   
+	   
+	   writepgm(tmp,"test_image_"+name);
    }
 }
