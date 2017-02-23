@@ -79,7 +79,7 @@ public class SeamCarving {
 		}
 	}
    
-	public static int[][] interest(int[][] image) {
+	public static int[][] interestVertical(int[][] image) {
 	   assert(image.length>1):"tableau trop petit";
 	   int[][]tab=new int[image.length][image[0].length];
 	   for (int j=0;j<image.length;j++){
@@ -93,6 +93,22 @@ public class SeamCarving {
 	   
 	   return tab;
    }
+	
+	public static int[][] interestHorizontal(int[][] image) {
+		   assert(image.length>1):"tableau trop petit";
+		   int[][]tab=new int[image.length][image[0].length];
+		   for (int i=0;i<image[0].length;i++){
+			  tab[0][i]=Math.abs(image[0][i]-image[1][i]);
+			   for (int j=1;j<image.length-1;j++){
+			   
+				   int moyenne = (image[j-1][i] + image[j+1][i])/2;
+				   tab[j][i]=Math.abs(moyenne-image[j][i]);
+			   }
+			   tab[image.length-1][i]=Math.abs(image[image.length-1][i]-image[image.length-2][i]);
+		   }
+		   
+		   return tab;
+	   }
 
    public static Graph tograph(int[][] itr){
 	   int hauteur=itr.length;
@@ -118,8 +134,70 @@ public class SeamCarving {
 	   for (int j=0;j<largeur;j++){
 		   graph.addEdge(new Edge(largeur*(hauteur-1)+j,hauteur*largeur,itr[hauteur-1][j]));
 	   }
+	   return graph;	   
+   }
+   
+   public static Graph tographHorizontal(int[][] itr){
+	   int hauteur=itr.length;
+	   int largeur = itr[0].length;
+	   GraphArrayList graph=new GraphArrayList(hauteur*largeur+2);
+	   for (int i=0;i<hauteur;i++){
+		   graph.addEdge(new Edge(hauteur*largeur+1,i,0));
+	   }
 	   
-	   //graph.writeFile("please.dot");
+	   for (int i=0;i<largeur-1;i++){
+		   graph.addEdge(new Edge(i*hauteur , (i+1)*hauteur , itr[0][i]));
+		   graph.addEdge(new Edge(i*hauteur , (i+1)*hauteur+1 , itr[0][i]));
+		   for (int j=1;j<hauteur-1;j++){
+			   graph.addEdge(new Edge(j+i*hauteur , j-1+(i+1)*hauteur , itr[j][i]));
+			   graph.addEdge(new Edge(j+i*hauteur , j+(i+1)*hauteur , itr[j][i]));
+			   graph.addEdge(new Edge(j+i*hauteur , j+1+(i+1)*hauteur , itr[j][i]));
+		   }
+		   graph.addEdge(new Edge(i*hauteur+hauteur-1 , (i+1)*hauteur+hauteur-1 , itr[hauteur-1][i]));
+		   graph.addEdge(new Edge(i*hauteur+hauteur-1 , (i+1)*hauteur+hauteur-2 , itr[hauteur-1][i]));
+	   }
+	   
+	   
+	   for (int i=0;i<hauteur;i++){
+		   graph.addEdge(new Edge(hauteur*(largeur-1)+i , largeur*hauteur , itr[i][largeur-1]));
+	   }
+	   	   
+	   return graph;	   
+   }
+   
+   public static Graph tographEA(int[][] itr){
+	   int hauteur=itr.length;
+	   int largeur = itr[0].length;
+	   GraphArrayList graph=new GraphArrayList(hauteur*largeur+2);
+	   for (int j=0;j<largeur;j++){
+		   graph.addEdge(new Edge(hauteur*largeur+1,j,0));
+	   }
+	   
+	   for (int j=0;j<hauteur-1;j++){
+		   graph.addEdge(new Edge(j*largeur,(j+1)*largeur, itr[j][1] ));
+		   graph.addEdge(new Edge(j*largeur,(j+1)*largeur+1, Math.abs( itr[j][1] - itr[j+1][0] )));
+		   for (int i=1;i<largeur-1;i++){
+			   graph.addEdge(new Edge(i+j*largeur,i-1+(j+1)*largeur,Math.abs( itr[j+1][i] - itr[j][i-1] )));   	// bas à gauche
+			   graph.addEdge(new Edge(i+j*largeur,i+(j+1)*largeur,Math.abs( itr[j][i+1] - itr[j][i-1] )));		// bas
+			   graph.addEdge(new Edge(i+j*largeur,i+1+(j+1)*largeur,Math.abs( itr[j+1][i] - itr[j][i+1] ))); 	// bas à droite
+		   }
+		   graph.addEdge(new Edge(j*largeur+largeur-1,(j+1)*largeur+largeur-2, Math.abs( itr[j+1][largeur-1] - itr[j][largeur-2] )));
+		   graph.addEdge(new Edge(j*largeur+largeur-1,(j+1)*largeur+largeur-1, Math.abs( itr[j][1] - itr[j][largeur-2] )));
+	   }
+	   
+	   
+	   for (int j=0;j<largeur;j++){
+		   if (j==0){
+			   graph.addEdge(new Edge(largeur*(hauteur-1)+j,hauteur*largeur,itr[hauteur-1][j+1]));
+		   }else{
+			   if (j==largeur-1){
+				   graph.addEdge(new Edge(largeur*(hauteur-1)+j,hauteur*largeur,itr[hauteur-1][j-1]));
+			   }else{
+				   graph.addEdge(new Edge(largeur*(hauteur-1)+j,hauteur*largeur, Math.abs( itr[hauteur-1][j+1] - itr[hauteur-1][j-1] )));
+			   }
+		   }
+	   }
+	   
 	   return graph;
 	   
    }
@@ -271,11 +349,11 @@ public class SeamCarving {
 		   }
 		   
 		   /* Calcul sur le tableau tmp */
-		   tmpInterImage = interest(tmpImage);
+		   tmpInterImage = interestVertical(tmpImage);
 		   if(usage) {
 			   prioriteSuppression(tmpInterImage,posHG,posBD,priorite);
 		   }
-		   g = tograph(tmpInterImage);
+		   g = new GraphImplicit(tmpInterImage,largeur,hauteur);
 		   //g.writeFile("test.dot");
 		   ordre = tritopo(g);
 		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
@@ -348,6 +426,78 @@ public class SeamCarving {
 		System.out.println("Fichier pret : test_image_"+name);
    }
    
+   
+   
+   
+   public static void deletePXHorizontal(int nbDelete, String name, int[] posHG, int[] posBD, boolean priorite, boolean usage) {
+	   if (!name.contains(".pgm")){
+		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
+		   return;
+	   }
+	   int[][] tabImage = readpgm(name);
+	   //int[][] tabInterImage = interest(tabImage);
+
+	   Graph g  = tographHorizontal(interestHorizontal(tabImage));
+	 	   
+	   ArrayList<Integer> ordre;
+	   ArrayList<Integer> cheminMin;
+	   
+	   int largeur = tabImage[0].length;
+	   int hauteur = tabImage.length;
+
+	   int[][] nouvelleImage = new int[hauteur-nbDelete][largeur];
+	   int j;
+	   
+	   for (int i=0 ; i<nbDelete ; i++) {
+
+		   /* Tableau tmp aux bonnes dimensions et rempli */
+		   int[][] tmpImage = new int[hauteur][largeur]; // les px
+		   int[][] tmpInterImage = new int[hauteur][largeur]; // l'interet
+		   
+		   for (int y=0 ; y<hauteur ; y++) {
+			   for (int x=0 ; x<largeur ; x++) {
+				   tmpImage[y][x]=tabImage[y][x];
+			   }
+		   }
+		   
+		   /* Calcul sur le tableau tmp */
+		   tmpInterImage = interestHorizontal(tmpImage);
+		   if(usage) {
+			   prioriteSuppression(tmpInterImage,posHG,posBD,priorite);
+		   }
+		   g = tographHorizontal(tmpInterImage);
+		   //g.writeFile("test.dot");
+		   ordre = tritopo(g);
+		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
+		   
+		   /* Parcours et suppression des pixels inutiles */
+		   for (int x=0 ; x<largeur ; x++) {
+			   j=0;
+			   for (int y=0 ; y<hauteur ; y++) {
+				   int position = hauteur * x + y;
+				   if (position != cheminMin.get(x+1)) {
+					   tabImage[j][x]=tabImage[y][x];
+					   j++;
+				   } 
+			   }
+		   }
+		   
+		   hauteur--;
+	   }
+	   
+	   /* On transfere l'image dans un tableau au bonne dimension */
+	   for (int y=0 ; y<nouvelleImage.length ; y++) {
+		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
+			   nouvelleImage[y][x] = tabImage[y][x];
+		   }
+	   }
+	   
+		writepgm(nouvelleImage,"modif_image_"+name);
+		
+		System.out.println("Fichier pret : modif_image_"+name);
+   }
+   
+   
    public static void prioriteSuppression(int[][] tab, int[] posHG, int[] posBD, boolean priorite) {
 	   int valeur=0;
 	   if (priorite) {
@@ -365,38 +515,49 @@ public class SeamCarving {
 	   }
    }
    
-   public static void main(String[] args) {
-	   String name = "ex1.pgm";
-	   int nbPixel = 100;
-	   int[][] tab = readpgm(name);
-	   int[][] tmp = tab;
-	   tab = interest(tab);
-	   //prioriteSuppression(tab,0,0,0,2,true);
-	   Graph g = tograph(tab);	
-	   tritopo(g);
+   public static void main(String[] args) {	   
+	   
+	   if (args.length!=2){
+		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
+		   System.exit(0);
+	   }
+	   
+	   int choix = -1;
 	   
 	   int[] posHG = new int[2];
 	   int[] posBD = new int[2];
-	   posHG[0] = 0;
-	   posHG[1] = 0;
-	   posBD[0] = 200;
-	   posBD[1] = 100;
-	   boolean priorite = true;
-	   boolean usage = true;
+	   Scanner s = new Scanner(System.in);
+	   posHG[0] = 316;
+	   posHG[1] = 160;
+	   posBD[0] = 416;
+	   posBD[1] = 386;
+	   boolean priorite = false;
+	   boolean usage = false;
 	   
-	   // nombre pixel à supprimer / nom / position haut gauche / position bas droite / priorite / usage
-	   deletePX(nbPixel,name,posHG,posBD,priorite,usage);
+	   String name = args[1];
+	   int nbPixel = Integer.parseInt(args[2]);
 	   
-	   /*if (args.length!=2){
-		   System.err.println("Utilisation : java -jar modelisation.jar NomDuFichier NombreDePixelASupprimer");
+	   
+	   System.out.print("Suppression de colonnes (1) ou de lignes (2) ? ");	   
+	   choix = s.nextInt();
+	   
+	   
+	   
+	   if (choix == 1 || choix == 2){
+		   if (choix == 1){
+			   
+			   
+			   
+			   // nombre pixel à supprimer / nom / position haut gauche / position bas droite / priorite / usage
+			   deletePX(nbPixel,name,posHG,posBD,priorite,usage);
+			   
+		   }else{
+			   
+			   deletePXHorizontal(nbPixel,name,posHG,posBD,priorite,usage);
+		   }
 	   }else{
-		   int nbPixel=Integer.parseInt(args[1]);
-		   String nom=args[0];
-		   deletePX(nbPixel,nom);
-	   }*/
+		   System.out.println("Choix incorrect");
+	   }
 	   
-	   
-	   
-	   writepgm(tmp,"test_image_"+name);
    }
 }
