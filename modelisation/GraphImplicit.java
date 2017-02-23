@@ -165,6 +165,6 @@ class GraphImplicit implements Graph {
 		int[][] test = readpgm("test.pgm");
 		int[][] testInt = interest(test);
 		GraphImplicit g = new GraphImplicit(testInt,testInt[0].length,testInt.length);
-		g.writeFile("test101.dot");
+		g.writeFile("testImplicit.dot");
 	}
 }
