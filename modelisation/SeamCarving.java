@@ -71,6 +71,7 @@ public class SeamCarving {
 				  
 			   	}*/
 			}
+			System.out.println("Fichier pret : "+filename);
 			bw.close();
 			fw.close();
 		}
@@ -257,9 +258,8 @@ public class SeamCarving {
 			   suffixe.add(u);
 		   }
 	   }
-
 	  Collections.reverse(suffixe);
-	  //System.out.println(suffixe);
+	  
 	  return suffixe;
    	}
    
@@ -317,13 +317,13 @@ public class SeamCarving {
 	   System.out.println("");
    }
    
-   public static void deletePX(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage) {
+   public static int[][] deletePX(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage, boolean implicite) {
 	   if (!name.contains(".pgm")){
 		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
-		   return;
+		   return null;
 	   }
+	   
 	   int[][] tabImage = readpgm(name);
-	   int[][] tabChemin = readpgm(name);
 
 	   Graph g;
 	   ArrayList<Integer> ordre;
@@ -331,17 +331,15 @@ public class SeamCarving {
 	   
 	   int largeur = tabImage[0].length;
 	   int hauteur = tabImage.length;
-
-	   int[][] nouvelleImage = new int[hauteur][largeur-nbDelete];
-	   int j;
 	   
 	   System.out.println("[CHARGEMENT]");
+	   int j;
 	   for (int i=0 ; i<nbDelete ; i++) {
-
-		   /* Tableau tmp au bonne dimmension et rempli */
+		   // Tableau tmp au bonne dimmension		   
 		   int[][] tmpImage = new int[hauteur][largeur]; // les px
 		   int[][] tmpInterImage = new int[hauteur][largeur]; // l'interet
 		   
+		   // On place l'image (precedente) dans un tableau au bonne dimmension pour faire le graphe d'interet
 		   for (int y=0 ; y<hauteur ; y++) {
 			   for (int x=0 ; x<largeur ; x++) {
 				   tmpImage[y][x]=tabImage[y][x];
@@ -353,10 +351,16 @@ public class SeamCarving {
 		   if(usage) {
 			   prioriteSuppression(tmpInterImage,zonePxl,priorite);
 		   }
-		   g = new GraphImplicit(tmpInterImage,largeur,hauteur);
-		   //g.writeFile("test.dot");
+		   
+		   // Selection de l'algo de construction du graphe
+		   if(implicite) {
+			   g = new GraphImplicit(tmpInterImage,largeur,hauteur);
+		   } else {
+			   g = tographEA(tmpInterImage);
+		   }
+		   
 		   ordre = tritopo(g);
-		   cheminMin = Bellman(g,g.vertices()-1,g.vertices()-2,ordre);
+		   cheminMin = Bellman(g, g.vertices()-1, g.vertices()-2, ordre);
 		   
 		   /* Parcours et suppression des pixels inutiles */
 		   for (int y=0 ; y<hauteur ; y++) {
@@ -372,72 +376,73 @@ public class SeamCarving {
 				   } 
 			   }
 		   }
-		   
 		   largeur--;
 	   }
 	   
+	   /* On ini les lignes plus utilisees pour la zone de pixel */
+	   if (usage) {
+			for (int y=0 ; y<zonePxl.length ; y++) {
+				for (int x=zonePxl[0].length-1 ; x>zonePxl[0].length-1-nbDelete ; x--) {
+					zonePxl[y][x]=false;
+				}
+			}
+	   }
+	   
 	   /* On transfere l'image dans un tableau au bonne dimension */
+	   int[][] nouvelleImage = new int[hauteur][largeur-nbDelete];
 	   for (int y=0 ; y<nouvelleImage.length ; y++) {
 		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
 			   nouvelleImage[y][x] = tabImage[y][x];
 		   }
 	   }
 	   
-	   /* On ini la derniere ligne du tab a  faux */
-	   if (usage) {
-		   int y=zonePxl.length-1;
-		   for (int x=zonePxl[0].length-1 ; x>zonePxl[0].length-1-nbDelete ; x--) {
-			   zonePxl[y][x]=false;
-		   }
-	   }
-	   
-	   // On affiche le resultat
-	   writepgm(nouvelleImage,"modif_image_"+name);
-	   System.out.println("Fichier pret : modif_image_"+name);
-	   
-	   
-	   /* On trace le chemin employe */
-	   boolean tracage=true;
-	   if (tracage) {
-		   for (int y=0 ; y<tabChemin.length ; y++) {
-			   int i=0;
-			   for (int x=0 ; x<tabChemin[0].length ; x++) {
+	   return nouvelleImage;
+   }
+   
+   public static void dessinChemin(int[][] image, int[][] nouvelleImage, String name, boolean colonne) {
+	   int[][] tabChemin = image;
+	   for (int y=0 ; y<image.length ; y++) {
+		   int i=0;
+		   for (int x=0 ; x<image[0].length ; x++) {
+			   if(colonne) {
 				   if (i<nouvelleImage[0].length && tabChemin[y][x]!=nouvelleImage[y][i]) {
+					   tabChemin[y][x]=255;
+				   } else {
+					   i++;
+				   }
+			   } else {
+				   if (i<nouvelleImage.length && tabChemin[y][x]!=nouvelleImage[i][x]) {
 					   tabChemin[y][x]=255;
 				   } else {
 					   i++;
 				   }
 			   }
 		   }
-		   
-		   // On affiche le resultat
-		   writepgm(tabChemin,"chemin_image_"+name);
-		   System.out.println("Fichier pret : chemin_image_"+name);
 	   }
 	   
-	   int[][] tabSelection = nouvelleImage;
+	   // On affiche le resultat
+	   writepgm(tabChemin,"chemin_image_"+name);
+   }
+
+   public static void dessinZonePxl(int[][] image, boolean[][] zonePxl, String name) {
+	   int[][] tabSelection = image;
 	   /* On trace la zone importante */
-	   if (usage) {
-		   for (int y=0 ; y<tabSelection.length ; y++) {
-			   for (int x=0 ; x<tabSelection[0].length ; x++) {
-				   if(zonePxl[y][x]) {
-					   tabSelection[y][x]=255;
-				   }
+	   for (int y=0 ; y<tabSelection.length ; y++) {
+		   for (int x=0 ; x<tabSelection[0].length ; x++) {
+			   if(zonePxl[y][x]) {
+				   tabSelection[y][x]=255;
 			   }
 		   }
-		   
-		   // On affiche le resultat
-		   writepgm(tabSelection,"selection_image_"+name);
-		   System.out.println("Fichier pret : selection_image_"+name);
 	   }
+		   
+	   // On affiche le resultat
+	   writepgm(tabSelection,"selection_image_"+name);
    }
    
-   
-   
-   public static void deletePXHorizontal(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage) {
+   public static int[][] deletePXHorizontal(int nbDelete, String name, boolean[][] zonePxl, boolean priorite, boolean usage) {
 	   if (!name.contains(".pgm")){
 		   System.err.println("Le fichier n'est pas au bon format (.pgm)");
-		   return;
+		   return null;
 	   }
 	   int[][] tabImage = readpgm(name);
 
@@ -450,12 +455,11 @@ public class SeamCarving {
 	   int hauteur = tabImage.length;
 
 	   int[][] nouvelleImage = new int[hauteur-nbDelete][largeur];
-	   int j;
 	   
 	   System.out.println("[CHARGEMENT]");
+	   int j;
 	   for (int i=0 ; i<nbDelete ; i++) {
-
-		   /* Tableau tmp aux bonnes dimensions et rempli */
+		   /* Tableau tmp aux bonnes dimensions */
 		   int[][] tmpImage = new int[hauteur][largeur]; // les px
 		   int[][] tmpInterImage = new int[hauteur][largeur]; // l'interet
 		   
@@ -482,14 +486,25 @@ public class SeamCarving {
 				   int position = hauteur * x + y;
 				   if (position != cheminMin.get(x+1)) {
 					   tabImage[j][x]=tabImage[y][x];
+					   if (usage) {
+						   zonePxl[j][x]=zonePxl[y][x];
+					   }
 					   j++;
 				   } 
 			   }
 		   }
-		   
 		   hauteur--;
-	   }
-	   
+	   	}
+
+		/* On ini les lignes non utilisees pour la zone de pixel */
+		if (usage) {
+			for (int y=zonePxl.length-1 ; y>zonePxl.length-1-nbDelete ; y--) {
+				for (int x=0 ; x<zonePxl[0].length ; x++) {
+					zonePxl[y][x]=false;
+				}
+			}
+		}
+
 	   /* On transfere l'image dans un tableau au bonne dimension */
 	   for (int y=0 ; y<nouvelleImage.length ; y++) {
 		   for (int x=0 ; x<nouvelleImage[0].length ; x++) {
@@ -497,9 +512,7 @@ public class SeamCarving {
 		   }
 	   }
 	   
-		writepgm(nouvelleImage,"modif_image_"+name);
-		
-		System.out.println("Fichier pret : modif_image_"+name);
+	   return nouvelleImage;
    }
  
    public static void prioriteSuppression(int[][] tab, boolean[][] zonePxl, boolean priorite) {
@@ -519,12 +532,25 @@ public class SeamCarving {
    /* Fonction qui initialise les pixels selectionné par l'utilisateur */
    public static void initTabPxl(boolean[][] tab, int posXHG, int posYHG, int posXBD, int posYBD) {
 	   if(posXHG>tab[0].length || posXBD>tab[0].length) {
-		   System.out.println("X TROP GRAND");
+		   System.err.println("Le x depasse la taille de l'image !");
 		   return;
 	   } else if (posYHG>tab.length || posYBD>tab.length) {
-		   System.out.println("Y TROP GRAND");
+		   System.err.println("Le y depasse la taille de l'image !");
 		   return;
 	   } else {
+		   if (posXHG>posXBD) {
+			   System.out.println("Inversion des X");
+			   int tmp=posXHG;
+			   posXHG=posXBD;
+			   posXBD=tmp;
+		   } else if (posYHG>posYBD) {
+			   System.out.println("Inversion des Y");
+			   int tmp=posYHG;
+			   posYHG=posYBD;
+			   posYBD=tmp;
+		   }
+		   
+		   /* on remplit le tableau */
 		   for (int y=posYHG ; y<=posYBD ; y++) {
    				for (int x=posXHG ; x<=posXBD ; x++) {			   
    					tab[y][x]=true;
@@ -533,7 +559,6 @@ public class SeamCarving {
 	   }
    }
    
-   
    public static void main(String[] args) {	   
 	   Scanner s = new Scanner(System.in);
 
@@ -541,21 +566,24 @@ public class SeamCarving {
 	   System.out.print("Veuillez entrer le nom du fichier a traiter (fichier.pgm): ");
 	   name = s.nextLine();
 	   	   
-	   int nbPixel = 5;
-	   System.out.print("Le nombre de pixel a traiter: ");
-	   nbPixel = s.nextInt();
-	   
-	   int[][] tab = readpgm(name);
-	   boolean[][] zonePxl = new boolean[tab.length][tab[0].length];
-	   //initTabPxl(zonePxl,0,0,100,100);
- 
+	   int nbPixel = 0;
+	   int[][] image = readpgm(name);
+	   boolean[][] zonePxl = new boolean[image.length][image[0].length]; 
+	   boolean implicite=true;
 	   boolean usage=false;
 	   boolean priorite=false;
 	   boolean colonnes=true;
+	   
+	   System.out.print("Le nombre de pixel a traiter: ");
+	   nbPixel = s.nextInt();
+	   
 	   System.out.print("Suppression de lignes (l) ou de colonnes (c): ");	   
 	   colonnes = s.next().equals("c");
 	   
 	   if(colonnes) {
+		   System.out.print("Graphe implicite (i) ou energie avant (e): ");	   
+		   implicite = s.next().equals("i");
+		   
 		   System.out.print("Voulez-vous faire usage de la selection de pixel: ");
 		   usage =  s.next().equals("oui");
 		   
@@ -599,12 +627,31 @@ public class SeamCarving {
 		   }
 	   }
 
-	   
 	   // On supprime les pixels
+	   int[][] nouvelleImage; 	   
 	   if (colonnes){
-		   deletePX(nbPixel,name,zonePxl,priorite,usage);
-	   }else{
-		   //deletePXHorizontal(nbPixel,name,zonePxl,priorite,usage);
+		   nouvelleImage = new int[image.length][image[0].length-nbPixel];
+		   nouvelleImage = deletePX(nbPixel,name,zonePxl,priorite,usage,implicite);
+	   } else {
+		   nouvelleImage = new int[image.length-nbPixel][image[0].length];
+		   nouvelleImage = deletePXHorizontal(nbPixel,name,zonePxl,priorite,usage);
+	   }
+	   
+	   // On dessine la nouvelle image 
+	   writepgm(nouvelleImage,"modif_image_"+name);
+		   
+		// On dessine le chemin employe
+	   if (colonnes) {
+		   boolean tracage=true;
+		   if (tracage) {
+			   dessinChemin(image,nouvelleImage,name,colonnes);
+		   }
+		   
+		   // On dessine la zone de pixel importante
+		   boolean zone=true;
+		   if(zone && usage)  {
+			   dessinZonePxl(nouvelleImage,zonePxl,name);
+		   }
 	   }
 	   
 	   s.close();
